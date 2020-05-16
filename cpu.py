@@ -2,12 +2,6 @@
 
 import sys
 
-# HLT = 0b00000001 # Running is false
-# LDI = 0b10000010 # Save 
-# PRN = 0b01000111 # Print
-# MUL = 0b10100010 # Multiply
-# PUSH = 0b01000101 # Push function - add the value from the register to the stack
-# POP = 0b01000110 # Pop function - pop the value from the top of the stack to the register
 
 class CPU:
     """Main CPU class."""
@@ -19,6 +13,9 @@ class CPU:
         self.pc = 0
         self.running = False
         self.sp = 7
+        self.equal = 0
+        self.lesser = 0
+        self.greater = 0
         self.HLT = 0b00000001 # Running is false
         self.LDI = 0b10000010 # Save 
         self.PRN = 0b01000111 # Print
@@ -29,21 +26,16 @@ class CPU:
         self.RET = 0b00010001  # RET function
         self.ADD = 0b10100000  # ADD function
 
+        self.CMP = 0b10100111
+        self.JMP = 0b01010100
+        self.JNE = 0b01010110
+        self.JEQ = 0b01010101
+
     
 
     def load(self):
         """Load a program into memory."""
         address = 0
-        # Hardcoded program:
-        # program = [
-        #     # From print8.ls8
-        #     0b10000010, # LDI R0,8
-        #     0b00000000,
-        #     0b00001000,
-        #     0b01000111, # PRN R0
-        #     0b00000000,
-        #     0b00000001, # HLT
-        # ]
 
         # print(sys.argv)
         # ensure two files passed in 
@@ -141,6 +133,18 @@ class CPU:
             elif command == self.ADD:
                 self.run_ADD()
 
+            # Sprint Challenge      
+            elif command == self.CMP:
+                self.run_CMP()
+
+            elif command == self.JMP:
+                self.run_JMP()
+
+            elif command == self.JEQ:
+                self.run_JEQ()
+
+            elif command == self.JNE:
+                self.run_JNE()
 
 
     def ram_read(self, address):
@@ -189,7 +193,6 @@ class CPU:
         self.register[self.sp] += 1
         self.pc += 2
 
-    ### Day 4 Call & Ret ############
     # Call
     def run_CALL(self):
         self.register[self.sp] -= 1
@@ -208,3 +211,39 @@ class CPU:
     def run_ADD(self):
         self.alu('ADD', self.ram[self.pc + 1], self.ram[self.pc + 2])
         self.pc +=3
+
+
+    # Sprint challenge
+    def run_CMP(self):
+        if self.register[self.ram_read(self.pc+1)] > self.register[self.ram_read(self.pc+2)]:
+            self.greater = 1
+            self.equal = 0
+            self.lesser = 0
+        elif self.register[self.ram_read(self.pc+1)] == self.register[self.ram_read(self.pc+2)]:
+            self.greater = 0
+            self.equal = 1
+            self.lesser = 0
+        elif self.register[self.ram_read(self.pc+1)] < self.register[self.ram_read(self.pc+2)]:
+            self.greater = 0
+            self.equal = 0
+            self.lesser = 1
+        self.pc += 3
+
+    def run_JMP(self):
+        self.pc = self.register[self.ram_read(self.pc+1)]
+
+    def run_JEQ(self):
+        if self.equal == 1:
+            self.pc = self.register[self.ram_read(self.pc+1)]
+        else:
+            self.pc += 2
+
+    def run_JNE(self):
+        if self.equal == 0:
+            self.pc = self.register[self.ram_read(self.pc+1)]
+        else:
+            self.pc += 2
+
+
+# cpu = CPU()
+# cpu.run()
